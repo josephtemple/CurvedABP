@@ -1,0 +1,54 @@
+# -------------------------
+# CMake / build artifacts
+# -------------------------
+/build/
+/cpp/build/
+/CMakeFiles/
+/CMakeCache.txt
+/*.cmake
+/*.cbp
+/*.sln
+/*.vcxproj*
+Makefile
+cmake_install.cmake
+
+# -------------------------
+# FetchContent / external deps
+# -------------------------
+cpp/build/_deps/
+# if you ever manually clone pybind11 here
+cpp/build/_deps/pybind11-src/
+
+# -------------------------
+# Compiled Python modules
+# -------------------------
+*.pyd
+*.so
+*.dll
+
+# -------------------------
+# Python cache
+# -------------------------
+__pycache__/
+*.py[cod]
+*$py.class
+
+# -------------------------
+# Jupyter / IPython
+# -------------------------
+.ipynb_checkpoints/
+
+# -------------------------
+# VS Code
+# -------------------------
+.vscode/
+*.code-workspace
+
+# -------------------------
+# Logs / temporary files
+# -------------------------
+*.log
+*.tmp
+*.swp
+*.bak
+*.out
