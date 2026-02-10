@@ -1,97 +1,95 @@
-/*
-# Particle class
-class Particles:
-    def __init__(self, x_i, y_i, v_i, theta_i):
-        self.n = len(x_i)
-        self.x = x_i
-        self.y = y_i
-
-        self.v = v_i
-        self.theta = theta_i
-
-        params.radius = 0.02
-        self.diffusion_rate = 5
-        self.mobility = .5
-        self.dt = 1/500
-
-    def update(self):
-        # brownian-ly change direction
-        self.theta += np.sqrt(2 * self.diffusion_rate * self.dt) * np.random.normal(size = self.n)
-
-        # collision detection, checking each pair of particles
-        for i in range(self.n):
-            for j in range(i+1, self.n):
-                x_separation = x(j) - x(i)
-                y_separation = y(j) - y(i)
-
-                separation = np.sqrt(x_separation**2 + y_separation**2)
-                
-                if separation < 2*params.radius:
-                    # flip particle velocities
-                    theta(i) = -theta(i)
-                    self.theta[j] = -self.theta[j]
-
-                    # move particles apart 
-                    nx = x_separation / separation 
-                    ny = y_separation / separation
-
-                    dist_to_move = 2*params.radius - separation
-                    dx = dist_to_move * nx
-                    dy = dist_to_move * ny
-
-                    x(i) = x(i) - dx / 2
-                    y(i) = y(i) - dy / 2
-
-                    x(j) = x(j) + dx / 2
-                    y(j) = y(j) + dy / 2
-
-            # boundary conditions: reverse along that direction
-            if x(i) - params.radius < -params.box_length:
-                x(i) = -params.box_length + params.radius
-                theta(i) = M_PI - theta(i) # (vx, vy) -> (-vx, vy) 
-            if x(i) + params.radius > params.box_length:
-                x(i) = params.box_length - params.radius
-                theta(i) = M_PI - theta(i) 
-            if y(i) - params.radius < -params.box_length:
-                y(i) = -params.box_length + params.radius
-                theta(i) = -theta(i) # (vx, vy) -> (vx, -vy) 
-            if y(i) + params.radius > params.box_length:
-                y(i) = params.box_length - params.radius
-                theta(i) = -theta(i) 
-
-        self.theta %= 2*M_PI
-
-    def step(self):
-        gradV = del_V(self.x, self.y)
-        Fx, Fy = -self.mobility * gradV
-
-        self.x += (self.v * np.cos(self.theta) + Fx) * self.dt
-        self.y += (self.v * np.sin(self.theta) + Fy) * self.dt
-
-    def get_position(self):
-        return self.x, self.y
-*/
-
 // core.cpp
 //
+// v1. 2D euclidean space
+// 
 // controls dynamics calculations for active brownian motion
+// 1. stochastic rotational diffusion 
 
-#include <pybind11/pybind11.h>
-#include <pybind11/numpy.h>
 #include <cmath>
 #include <random>
+#include <vector>
+//#include <vec2.h>
 
-#ifndef M_PI
-#define M_PI 3.14159265358979323846
-#endif
+constexpr double PI = 3.14159265358979323846;
 
-namespace py = pybind11;
+struct Vec2 {
+    double x, y;
+
+    // constructors
+    Vec2() : x(0), y(0) {}
+    Vec2(double x_, double y_) : x(x_), y(y_) {}
+
+    // operators on vectors
+    Vec2 operator+(const Vec2& other) const {
+        return {x + other.x, y + other.y};
+    }
+    Vec2 operator-(const Vec2& other) const {
+        return {x - other.x, y - other.y};
+    }
+    Vec2 operator*(const double a) const {
+        return {x * a, y * a};
+    }
+    double norm2() const {
+        return x*x + y*y;
+    }
+    double norm() const {
+        return sqrt(x*x + y*y);
+    }
+};
+
+struct Vec2View {
+    double& x;
+    double& y;
+
+    // vector ops
+    double norm() const {
+        return std::sqrt(x*x + y*y);
+    }
+
+    // vector operators on Vec2View
+    Vec2View& operator+=(const Vec2& v) {
+        x += v.x;
+        y += v.y;
+        return *this;
+    }
+    Vec2View& operator-=(const Vec2& v) {
+        x -= v.x;
+        y -= v.y;
+        return *this;
+    }
+    Vec2View& operator*=(double a) {
+        x *= a;
+        y *= a;
+        return *this;
+    }
+
+    operator Vec2() const {
+        return {x, y};
+    }
+};
+
+
+// Heuristic gradient of potential function from V = A(x^4 - x^2 + y^4 - y^2)
+Vec2 gradV(double x, double y, double A) {
+    // grad(V) = A[4x^3 - 2x, 4y^3 - 2y]
+    return Vec2(A*x * (4*x*x - 2), A*y * (4*y*y - 2));
+}
 
 // Data structure for the state of all the particles
 struct ParticleState {
-    py::array_t<double> x;        // pointer to array of x positions
-    py::array_t<double> y;        // same for y
-    py::array_t<double> theta;    // same for orientations
+    int N;         
+    std::vector<double> x; 
+    std::vector<double> y;
+    std::vector<double> theta; 
+
+    // constructor, sets particule number N and allocates empty arrays of length N for x,y,theta
+    ParticleState(int N_)
+        : N(N_), x(N_), y(N_), theta(N_) {}
+
+    // make available a way to do vector math on the coordinates, but keep SoA memory layout
+    Vec2View pos(int i) {
+        return Vec2View{ x[i], y[i] };
+    }
 };
 
 // Data structure for the constant parameters of the simulation
@@ -103,98 +101,84 @@ struct SimParams {
     double dt;                        // time step size
     double box_length;                // size of box to which particles are constrained
     double potential_strength;        // change how strong the potential function acts
-    unsigned int seed;          // random number generation seed
+    unsigned int seed;                // random number generation seed
 };
 
-void step(ParticleState& state, const SimParams& params) {
-    // construct C++ variables from numpy arrays stored in ParticleState
-    auto x = state.x.mutable_unchecked<1>();
-    auto y = state.y.mutable_unchecked<1>();
-    auto theta = state.theta.mutable_unchecked<1>();
-    int N = x.shape(0);
+// Data structure for packaging the whole simulation
+struct Simulation {
+    ParticleState state;
+    SimParams params;
+    std::mt19937 rng;
+    std::size_t step_index = 0;
 
+    Simulation(int N, const SimParams& p)
+        : state(N), params(p), rng(p.seed) {}
+};
+
+
+// Step particle in time according to 
+void step(Simulation& sim) {
     // set random seed and define probability distribution for brownian motion
-    static std::mt19937 rng(params.seed);
+    auto& state = sim.state;
+    auto& params = sim.params;
+    auto& rng = sim.rng;
+    
     std::normal_distribution<double> noise(0.0, 1.0);
 
     // update particle trajectories
-    for (int i = 0; i < N; ++i) {
+    for (int i = 0; i < state.N; ++i) {
         // rotational diffusion
-        theta(i) += std::sqrt(2.0 * params.diffusion * params.dt) * noise(rng);
-
+        state.theta[i] += std::sqrt(2.0 * params.diffusion * params.dt) * noise(rng);
+        
+        Vec2View pi = state.pos(i);
         // collision detection
-        for (int j = i + 1; j < N; ++j) {
-            auto x_separation = x(j) - x(i);
-            auto y_separation = y(j) - y(i);
+        for (int j = i + 1; j < state.N; ++j) {
+            Vec2View pj = state.pos(j);
 
-            auto separation = std::sqrt(x_separation * x_separation + y_separation * y_separation);
+            Vec2 separation_vec = Vec2(pj) - Vec2(pi); 
+            auto separation = separation_vec.norm();
 
             // if particle centers are closer than twice the radius, they are intersecting, so push them apart
-            if (separation < 2*params.radius) {
+            if (separation < 2*params.radius && separation > 1e-10) {
                 // flip particle's heading directions
-                theta(i) = -theta(i);
-                theta(j) = -theta(j);
+                state.theta[i] = -state.theta[i];
+                state.theta[j] = -state.theta[j];
 
                 // move particles apart 
-                auto nx = x_separation / separation;
-                auto ny = y_separation / separation;
+                auto n = separation_vec * (1 / separation);  // unit vector along separation
 
-                auto dist_to_move = 2*params.radius - separation;
-                auto dx = dist_to_move * nx;
-                auto dy = dist_to_move * ny;
+                auto dist_to_move = 2*params.radius - separation; // particles move apart so their boundaries don't intersect
+                Vec2 disp = n * dist_to_move * 0.5 ; // displacement vector for each is along n, half of total displacment
 
-                x(i) -= dx / 2;
-                y(i) -= dy / 2;
-
-                x(j) += dx / 2;
-                y(j) += dy / 2;
+                pi -= disp;
+                pj += disp;
             }
 
-            // if edge of particle tries to leave the box, reflect it back
-            if (x(i) - params.radius < -params.box_length) {
-                x(i) = -params.box_length + params.radius;
-                theta(i) = M_PI - theta(i);       // (vx, vy) -> (-vx, vy) 
-            }
-            if (x(i) + params.radius > params.box_length) {
-                x(i) = params.box_length - params.radius;
-                theta(i) = M_PI - theta(i) ;
-            }
-            if (y(i) - params.radius < -params.box_length) {
-                y(i) = -params.box_length + params.radius;
-                theta(i) = -theta(i);             // (vx, vy) -> (vx, -vy) 
-            }
-            if (y(i) + params.radius > params.box_length) {
-                y(i) = params.box_length - params.radius;
-                theta(i) = -theta(i);
-            }
+        // if edge of particle tries to leave the box, reflect it back
+        if (state.x[i] - params.radius < -params.box_length) {
+            state.x[i] = -params.box_length + params.radius;
+            state.theta[i] = PI - state.theta[i];       // (vx, vy) -> (-vx, vy) 
+        }
+        if (state.x[i] + params.radius > params.box_length) {
+            state.x[i] = params.box_length - params.radius;
+            state.theta[i] = PI - state.theta[i] ;
+        }
+        if (state.y[i] - params.radius < -params.box_length) {
+            state.y[i] = -params.box_length + params.radius;
+            state.theta[i] = -state.theta[i];             // (vx, vy) -> (vx, -vy) 
+        }
+        if (state.y[i] + params.radius > params.box_length) {
+            state.y[i] = params.box_length - params.radius;
+            state.theta[i] = -state.theta[i];
+        }
         }
 
-        // externial field with potential V(r) = 4r^3 - 2r for both r={x,y}
-        double Fx = -params.mobility * params.potential_strength * (4.0*pow(x(i),3) - 2.0*x(i));
-        double Fy = -params.mobility * params.potential_strength * (4.0*pow(y(i),3) - 2.0*y(i));
-        x(i) += (params.v * std::cos(theta(i)) + Fx) * params.dt;
-        y(i) += (params.v * std::sin(theta(i)) + Fy) * params.dt;
+        // update positions with external field along heading direction
+        Vec2 grad_V = gradV(state.x[i], state.y[i], params.potential_strength);
+        Vec2 unit_theta = Vec2(std::cos(state.theta[i]), std::sin(state.theta[i]));
+
+        pi += (unit_theta * params.v - grad_V * params.mobility) * params.dt;
     }
+
+    ++sim.step_index;
 };
-
-// Expose module
-PYBIND11_MODULE(abp_core, m) {
-    py::class_<ParticleState>(m, "ParticleState")
-        .def(py::init<>())
-        .def_readwrite("x", &ParticleState::x)
-        .def_readwrite("y", &ParticleState::y)
-        .def_readwrite("theta", &ParticleState::theta);
-
-    py::class_<SimParams>(m, "SimParams")
-        .def(py::init<>())
-        .def_readwrite("v", &SimParams::v)
-        .def_readwrite("radius", &SimParams::radius)
-        .def_readwrite("diffusion", &SimParams::diffusion)
-        .def_readwrite("mobility", &SimParams::mobility)
-        .def_readwrite("dt", &SimParams::dt)
-        .def_readwrite("box_length", &SimParams::box_length)
-        .def_readwrite("potential_strength", &SimParams::potential_strength)
-        .def_readwrite("seed", &SimParams::seed);
-
-    m.def("step", &step);
-}
