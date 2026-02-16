@@ -6,7 +6,6 @@ Vec2 gradV(double x, double y, double A) {
     return Vec2(A*x * (4*x*x - 2), A*y * (4*y*y - 2));
 }
 
-
 // Step particle in time according to 
 void step(Simulation& sim) {
     // set random seed and define probability distribution for brownian motion

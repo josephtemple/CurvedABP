@@ -11,6 +11,7 @@ add_executable(core
   src/vec2.cpp
   src/state.cpp
   src/dynamics.cpp
+  src/h5sim.cpp
 )
 
 target_include_directories(core PRIVATE
