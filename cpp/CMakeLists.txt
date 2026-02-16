@@ -1,15 +1,13 @@
-cmake_minimum_required(VERSION 3.15)
-project(abp_core)
+cmake_minimum_required(VERSION 3.20)
+project(CurvedABP)
 
-include(FetchContent)
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-FetchContent_Declare(
-  pybind11
-  GIT_REPOSITORY https://github.com/pybind/pybind11.git
-  GIT_TAG v2.11.1
-)
+find_package(HDF5 REQUIRED COMPONENTS C CXX HL)
 
-FetchContent_MakeAvailable(pybind11)
+include_directories(${HDF5_INCLUDE_DIRS})
 
+add_executable(core src/core.cpp)
 
-pybind11_add_module(abp_core src/core.cpp)
+target_link_libraries(core PRIVATE ${HDF5_CXX_LIBRARIES} ${HDF5_HL_LIBRARIES} ${HDF5_LIBRARIES})
