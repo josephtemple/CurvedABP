@@ -11,7 +11,7 @@
 // 5. saving output to HDF5 file format
 
 // my headers
-#include "vec2.h"       // vector math
+#include "vec.h"       // vector math
 #include "state.h"      // particle state, simulation parameters, and sim itself 
 #include "dynamics.h"   // potential function and simulation timesteps
 #include "h5sim.h"      // defining structure of and writing to hdf5 

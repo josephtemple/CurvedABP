@@ -8,7 +8,7 @@ find_package(HDF5 REQUIRED COMPONENTS C CXX HL)
 
 add_executable(core 
   src/core.cpp
-  src/vec2.cpp
+  src/vec.cpp
   src/state.cpp
   src/dynamics.cpp
   src/h5sim.cpp

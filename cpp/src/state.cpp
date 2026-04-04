@@ -1,4 +1,3 @@
-#pragma once
 #include <state.h>
 
 // particle state constructor

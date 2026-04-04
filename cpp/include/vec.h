@@ -55,8 +55,6 @@ struct Vec3View {
     Vec3View& operator-=(const Vec3& v);
     Vec3View& operator*=(double a);
 
-
-
     double norm() const;
 
     operator Vec3() const;

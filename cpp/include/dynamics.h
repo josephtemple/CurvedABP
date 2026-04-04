@@ -1,6 +1,6 @@
 #pragma once
 #include "state.h"
-#include "vec2.h"
+#include "vec.h"
 
 constexpr double PI = 3.14159265358979323846;
 

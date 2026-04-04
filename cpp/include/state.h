@@ -1,7 +1,7 @@
 #pragma once
 #include <vector>
 #include <random>
-#include "vec2.h"
+#include "vec.h"
 
 // Data structure for the state of all the particles
 struct ParticleState {
@@ -10,13 +10,10 @@ struct ParticleState {
     std::vector<double> y;
     std::vector<double> theta; 
 
-    ParticleState(int N_)
-        : N(N_), x(N_), y(N_), theta(N_) {}
+    ParticleState(int N_);
 
     // make available a way to do vector math on the coordinates, but keep SoA memory layout
-    Vec2View pos(int i) {
-        return Vec2View{ x[i], y[i] };
-    }
+    Vec2View pos(int);
 };
 
 // Data structure for the constant parameters of the simulation
@@ -30,8 +27,7 @@ struct SimParams {
     double potential_strength;        // change how strong the potential function acts
     unsigned int seed;                // random number generation seed
 
-    SimParams(double v_, double r_, double diff_, double mobil_, double dt_, double boxlength_, double potenstr_, unsigned int seed_)
-        : v(v_), radius(r_), diffusion(diff_), mobility(mobil_), dt(dt_), box_length(boxlength_), potential_strength(potenstr_), seed(seed_) {}
+    SimParams(double v_, double r_, double diff_, double mobil_, double dt_, double boxlength_, double potenstr_, unsigned int seed_);
 };
 
 // Data structure for packaging the whole simulation
@@ -41,6 +37,5 @@ struct Simulation {
     std::mt19937 rng;
     std::size_t step_index = 0;
 
-    Simulation(int N, const SimParams& p)
-        : state(N), params(p), rng(p.seed) {}
+    Simulation(int N, const SimParams& p);
 };

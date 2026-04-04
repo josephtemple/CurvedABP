@@ -1,4 +1,3 @@
-#pragma once
 #include "h5sim.h"
 #include "h5write.h"
 
