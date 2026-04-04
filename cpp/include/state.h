@@ -6,8 +6,8 @@
 // Data structure for the state of all the particles
 struct ParticleState {
     int N;         
-    std::vector<double> x; 
-    std::vector<double> y;
+    std::vector<double> q1; 
+    std::vector<double> q2;
     std::vector<double> theta; 
 
     ParticleState(int N_);

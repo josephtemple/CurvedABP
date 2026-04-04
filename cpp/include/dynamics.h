@@ -1,3 +1,7 @@
+// dynamics.h
+//
+// gradient function and simulation stepping.
+
 #pragma once
 #include "state.h"
 #include "vec.h"

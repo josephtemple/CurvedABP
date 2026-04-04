@@ -9,8 +9,8 @@ struct HDF5Handles {
     H5::Group g_state;
     H5::Group g_meta;
 
-    H5::DataSet dset_x;
-    H5::DataSet dset_y;
+    H5::DataSet dset_q1;
+    H5::DataSet dset_q2;
     H5::DataSet dset_theta;
 
     H5::DataSpace mem_space;

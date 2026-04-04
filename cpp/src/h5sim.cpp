@@ -41,8 +41,8 @@ HDF5Handles init_hdf5(
     hsize_t dims[2] = {(hsize_t)T, (hsize_t)numParticles};
     H5::DataSpace traj_space(2, dims);
 
-    h5.dset_x = h5.g_state.createDataSet("x", H5::PredType::NATIVE_DOUBLE, traj_space);
-    h5.dset_y = h5.g_state.createDataSet("y", H5::PredType::NATIVE_DOUBLE, traj_space);
+    h5.dset_q1 = h5.g_state.createDataSet("q1", H5::PredType::NATIVE_DOUBLE, traj_space);
+    h5.dset_q2 = h5.g_state.createDataSet("q2", H5::PredType::NATIVE_DOUBLE, traj_space);
     h5.dset_theta = h5.g_state.createDataSet("theta", H5::PredType::NATIVE_DOUBLE, traj_space);
 
     // memory dataspace
@@ -57,17 +57,17 @@ void write_frame(HDF5Handles& h5, const Simulation& sim, int save_index) {
     hsize_t count[2] = {1, (hsize_t)sim.state.N};
 
     // get current dataset spaces
-    H5::DataSpace fs_x = h5.dset_x.getSpace();
-    H5::DataSpace fs_y = h5.dset_y.getSpace();
+    H5::DataSpace fs_q1 = h5.dset_q1.getSpace();
+    H5::DataSpace fs_q2 = h5.dset_q2.getSpace();
     H5::DataSpace fs_t = h5.dset_theta.getSpace();
 
     // select hyperslabs
-    fs_x.selectHyperslab(H5S_SELECT_SET, count, start);
-    fs_y.selectHyperslab(H5S_SELECT_SET, count, start);
+    fs_q1.selectHyperslab(H5S_SELECT_SET, count, start);
+    fs_q2.selectHyperslab(H5S_SELECT_SET, count, start);
     fs_t.selectHyperslab(H5S_SELECT_SET, count, start);
 
     // write current state
-    h5.dset_x.write(sim.state.x.data(), H5::PredType::NATIVE_DOUBLE, h5.mem_space, fs_x);
-    h5.dset_y.write(sim.state.y.data(), H5::PredType::NATIVE_DOUBLE, h5.mem_space, fs_y);
+    h5.dset_q1.write(sim.state.q1.data(), H5::PredType::NATIVE_DOUBLE, h5.mem_space, fs_q1);
+    h5.dset_q2.write(sim.state.q2.data(), H5::PredType::NATIVE_DOUBLE, h5.mem_space, fs_q2);
     h5.dset_theta.write(sim.state.theta.data(), H5::PredType::NATIVE_DOUBLE, h5.mem_space, fs_t);
 }

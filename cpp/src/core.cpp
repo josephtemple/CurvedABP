@@ -16,6 +16,18 @@
 #include "dynamics.h"   // potential function and simulation timesteps
 #include "h5sim.h"      // defining structure of and writing to hdf5 
 
+// std includes
+#include <ctime>
+
+std::string getCurrentDateTime() {
+    std::time_t now = std::time(nullptr);
+    std::tm* localTime = std::localtime(&now);
+
+    char buffer[80];
+    std::strftime(buffer, sizeof(buffer), "%Y-%m-%d_%H-%M-%S_", localTime);
+    return std::string(buffer);
+}
+
 // main function to run timestepping and data saving
 int main() {
     // define trial simulation
@@ -38,8 +50,9 @@ int main() {
     int saveEvery = 10;
 
     std::string data_dir = "../../data/";
+    std::string time = getCurrentDateTime();
     std::string filename = "particles.h5";
-    auto h5 = init_hdf5(data_dir+filename, simulationParameters, numParticles, numSteps, saveEvery);
+    auto h5 = init_hdf5(data_dir+time+filename, simulationParameters, numParticles, numSteps, saveEvery);
 
     // run for however many timesteps and save to HDF5
     int save_index = 0;

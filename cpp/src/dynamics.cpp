@@ -22,7 +22,7 @@ void step(Simulation& sim) {
 
         // update positions with external field along heading direction
         Vec2View pi = state.pos(i);
-        Vec2 grad_V = gradV(state.x[i], state.y[i], params.potential_strength);
+        Vec2 grad_V = gradV(state.q1[i], state.q2[i], params.potential_strength);
         Vec2 unit_theta = Vec2(std::cos(state.theta[i]), std::sin(state.theta[i]));
 
         pi += (unit_theta * params.v - grad_V * params.mobility) * params.dt;
@@ -56,20 +56,20 @@ void step(Simulation& sim) {
     }
     // boundary checking
     for (int i = 0; i < state.N; ++i) {
-        if (state.x[i] - params.radius < -params.box_length) {
-            state.x[i] = -params.box_length + params.radius;
+        if (state.q1[i] - params.radius < -params.box_length) {
+            state.q1[i] = -params.box_length + params.radius;
             state.theta[i] = PI - state.theta[i];       // (vx, vy) -> (-vx, vy) 
         }
-        if (state.x[i] + params.radius > params.box_length) {
-            state.x[i] = params.box_length - params.radius;
+        if (state.q1[i] + params.radius > params.box_length) {
+            state.q1[i] = params.box_length - params.radius;
             state.theta[i] = PI - state.theta[i] ;
         }
-        if (state.y[i] - params.radius < -params.box_length) {
-            state.y[i] = -params.box_length + params.radius;
+        if (state.q2[i] - params.radius < -params.box_length) {
+            state.q2[i] = -params.box_length + params.radius;
             state.theta[i] = -state.theta[i];             // (vx, vy) -> (vx, -vy) 
         }
-        if (state.y[i] + params.radius > params.box_length) {
-            state.y[i] = params.box_length - params.radius;
+        if (state.q2[i] + params.radius > params.box_length) {
+            state.q2[i] = params.box_length - params.radius;
             state.theta[i] = -state.theta[i];
         }
     }
