@@ -27,6 +27,7 @@ HDF5Handles init_hdf5(
     write_H5("mobility", h5.g_params, params.mobility);
     write_H5("dt", h5.g_params, params.dt);
     write_H5("potential_strength", h5.g_params, params.potential_strength);
+    write_H5("manifold_type", h5.g_params, params.manifold_type[0]);
     write_H5("seed", h5.g_params, params.seed);
 
     // metadata

@@ -4,7 +4,7 @@
 /*
 
 varies from previous version by moving from a bounded 2D Euclidean
-plane to a generic manifold. 
+plane to a closed manifold (sphere or torus). 
 
 some things stay the same
 - stochastic rotational diffusion (now in the tangent space)

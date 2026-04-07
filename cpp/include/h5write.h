@@ -1,6 +1,7 @@
 // to output to HDF5 file format
 #pragma once
 #include <H5Cpp.h>
+#include <string>
 
 // Template method for writing to HDF5
 template<typename T>
@@ -20,6 +21,12 @@ template<>
 struct H5TypeMap<int> {
     static H5::PredType type() { return H5::PredType::NATIVE_INT; }
 };
+
+template<>
+struct H5TypeMap<char> {
+    static H5::PredType type() { return H5::PredType::NATIVE_CHAR; }
+};
+
 
 // template method for writing to a given container
 template<typename T, typename H5Container>
