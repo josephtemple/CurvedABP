@@ -12,6 +12,7 @@ add_executable(core
   src/state.cpp
   src/dynamics.cpp
   src/h5sim.cpp
+  src/manifold.cpp
 )
 
 target_include_directories(core PRIVATE

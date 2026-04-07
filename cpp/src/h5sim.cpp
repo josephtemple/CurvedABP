@@ -26,7 +26,6 @@ HDF5Handles init_hdf5(
     write_H5("diffusion", h5.g_params, params.diffusion);
     write_H5("mobility", h5.g_params, params.mobility);
     write_H5("dt", h5.g_params, params.dt);
-    write_H5("box_length", h5.g_params, params.box_length);
     write_H5("potential_strength", h5.g_params, params.potential_strength);
     write_H5("seed", h5.g_params, params.seed);
 

@@ -1,20 +1,23 @@
 // core.cpp
 //
-// v1. 2D euclidean space
-// 
-// controls dynamics calculations for active brownian motion
-// 1. stochastic rotational diffusion 
-// 2. external field, move along gradient (a la taxis)
-// Those combined constitute an Euler-Maruyama discretization of the SDE
-// 3. hard-sphere collision detection
-// 4. application of boundary conditions
-// 5. saving output to HDF5 file format
+// v2. active brownian motion on a curved manifold
+/*
+
+varies from previous version by moving from a bounded 2D Euclidean
+plane to a generic manifold. 
+
+some things stay the same
+- stochastic rotational diffusion (now in the tangent space)
+- 
+
+*/
 
 // my headers
 #include "vec.h"       // vector math
 #include "state.h"      // particle state, simulation parameters, and sim itself 
 #include "dynamics.h"   // potential function and simulation timesteps
 #include "h5sim.h"      // defining structure of and writing to hdf5 
+#include "manifold.h"   // metric and related functions on manifolds
 
 // std includes
 #include <ctime>
@@ -38,12 +41,13 @@ int main() {
     double diffusion = 5;
     double mobility = 0.05;
     double dt = 0.005;
-    double box_length = 1;
     double potential_strength = 1;
+    std::string manifold_type = "torus";
     unsigned int seed = 10;
-    SimParams simulationParameters(propulsion_speed, particle_radius, diffusion, mobility, dt, box_length, potential_strength, seed);
+    SimParams simulationParameters(propulsion_speed, particle_radius, diffusion, mobility, dt, potential_strength, manifold_type, seed);
 
-    Simulation simulation(numParticles, simulationParameters);
+    auto manifold = std::make_unique<TorusManifold>(2.0, 0.5);  // R, r
+    Simulation simulation(numParticles, simulationParameters, std::move(manifold));
 
     // set up HDF5 file
     int numSteps = 5000;

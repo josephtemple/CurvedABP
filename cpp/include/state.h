@@ -1,7 +1,9 @@
 #pragma once
 #include <vector>
 #include <random>
+#include <memory>
 #include "vec.h"
+#include "manifold.h"
 
 // Data structure for the state of all the particles
 struct ParticleState {
@@ -23,19 +25,20 @@ struct SimParams {
     double diffusion;                 // rotational diffusion constant in rad^2 / time
     double mobility;                  // 
     double dt;                        // time step size
-    double box_length;                // size of box to which particles are constrained
     double potential_strength;        // change how strong the potential function acts
+    std::string manifold_type;        // type of manifold. allowed: {sphere, torus}
     unsigned int seed;                // random number generation seed
 
-    SimParams(double v_, double r_, double diff_, double mobil_, double dt_, double boxlength_, double potenstr_, unsigned int seed_);
+    SimParams(double v_, double r_, double diff_, double mobil_, double dt_, double potenstr_, std::string manifold_type_, unsigned int seed_);
 };
 
 // Data structure for packaging the whole simulation
 struct Simulation {
     ParticleState state;
     SimParams params;
+    std::unique_ptr<Manifold> manifold;
     std::mt19937 rng;
     std::size_t step_index = 0;
 
-    Simulation(int N, const SimParams& p);
+    Simulation(int N, const SimParams& p, std::unique_ptr<Manifold> m);
 };
