@@ -28,3 +28,14 @@ double TorusManifold::vielbein2(double q1, double q2) const { return 1.0 / r; }
 double TorusManifold::connection(double q1, double q2, double dq1, double dq2) const {
     return -std::sin(q2) * dq1;
 }
+
+
+// euclidean manifold
+EuclideanManifold::EuclideanManifold() {}
+double EuclideanManifold::g11(double q1, double q2) const { return 1; }
+double EuclideanManifold::g22(double q1, double q2) const { return 1; }
+
+double EuclideanManifold::vielbein1(double q1, double q2) const { return 1; }
+double EuclideanManifold::vielbein2(double q1, double q2) const { return 1; }
+
+double EuclideanManifold::connection(double q1, double q2, double dq1, double dq2) const { return 1; }

@@ -22,6 +22,8 @@ struct H5TypeMap<int> {
     static H5::PredType type() { return H5::PredType::NATIVE_INT; }
 };
 
+
+// chars will be {115 = 's' for Sphere, 116 = 't' for Torus, or 117 = 'u' for eUclidean}
 template<>
 struct H5TypeMap<char> {
     static H5::PredType type() { return H5::PredType::NATIVE_CHAR; }

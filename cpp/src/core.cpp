@@ -46,10 +46,16 @@ int main() {
     unsigned int seed = 10;
     SimParams simulationParameters(propulsion_speed, particle_radius, diffusion, mobility, dt, potential_strength, manifold_type, seed);
 
-    auto manifold = std::make_unique<TorusManifold>(2.0, 0.5);  // R, r
+    // this doesn't work rn.
+    auto manifold = std::make_unique<SphereManifold>(2.0);
+    if (manifold_type == "torus") { auto manifold = std::make_unique<TorusManifold>(2.0, 0.5); } // R = 2, r =0.5
+    else if (manifold_type == "sphere") { auto manifold = std::make_unique<SphereManifold>(2.0); } // R
+    else if (manifold_type == "euclidean") {auto manifold = std::make_unique<EuclideanManifold>(); }
+    else {return -1;} // failure, undefined manifold type
+
     Simulation simulation(numParticles, simulationParameters, std::move(manifold));
 
-    // set up HDF5 file
+    // set up HDF5 file`
     int numSteps = 5000;
     int saveEvery = 10;
 

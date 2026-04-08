@@ -37,3 +37,14 @@ struct TorusManifold : Manifold {
     double g22(double q1, double q2) const override;
     double connection(double q1, double q2, double dq1, double dq2) const override;
 };
+
+// euclidean manifold [q1 = x, q2 = y]
+struct EuclideanManifold : Manifold {
+    EuclideanManifold();
+
+    double vielbein1(double q1, double q2) const override;
+    double vielbein2(double q1, double q2) const override;
+    double g11(double q1, double q2) const override;
+    double g22(double q1, double q2) const override;
+    double connection(double q1, double q2, double dq1, double dq2) const override;
+};
