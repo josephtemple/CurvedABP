@@ -1,14 +1,13 @@
 // core.cpp
 //
-// v2. active brownian motion on a curved manifold
+// v3. active brownian motion on a curved manifold, but better
 /*
 
 varies from previous version by moving from a bounded 2D Euclidean
 plane to a closed manifold (sphere or torus). 
 
-some things stay the same
-- stochastic rotational diffusion (now in the tangent space)
-- 
+now includes git command line for experiment parameters and can be run by an external
+bash script to perform parameter sweeps
 
 */
 
