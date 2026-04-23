@@ -32,4 +32,13 @@ Simulation::Simulation(int N, const SimParams& p, std::unique_ptr<Manifold> m)
                 state.theta[i] = rand_angle(rng);      // tangent space theta in (0,2pi)
         }
     }
+    else if (p.manifold_type == "euclidean") {
+        double L = 2*sqrt(PI); 
+        std::uniform_real_distribution<double> pos(-L/2, L/2);  // starting area of 4pi, side lengths of 2(pi)^1/2
+        for (int i = 0; i < N; ++i) {
+                state.q1[i]    = pos(rng);
+                state.q2[i]    = pos(rng);
+                state.theta[i] = rand_angle(rng);
+        }
+    }
 }

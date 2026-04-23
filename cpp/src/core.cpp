@@ -21,48 +21,75 @@ some things stay the same
 
 // std includes
 #include <ctime>
+#include <string>
+#include <stdexcept>
+#include <unordered_map>
+#include <iostream>
+#include <filesystem>
 
 std::string getCurrentDateTime() {
     std::time_t now = std::time(nullptr);
     std::tm* localTime = std::localtime(&now);
 
     char buffer[80];
-    std::strftime(buffer, sizeof(buffer), "%Y-%m-%d_%H-%M-%S_", localTime);
+    std::strftime(buffer, sizeof(buffer), "%Y-%m-%d_%H-%M-%S", localTime);
     return std::string(buffer);
 }
 
-// main function to run timestepping and data saving
-int main() {
-    // define trial simulation
-    int numParticles = 50;
+// Parse --key value pairs from argv
+std::unordered_map<std::string, std::string> parseArgs(int argc, char* argv[]) {
+    std::unordered_map<std::string, std::string> args;
+    for (int i = 1; i < argc - 1; i += 2) {
+        std::string key = argv[i];
+        if (key.substr(0, 2) != "--") throw std::invalid_argument("Expected --key, got: " + key);
+        args[key.substr(2)] = argv[i + 1];
+    }
+    return args;
+}
 
-    double propulsion_speed = 1;
-    double particle_radius = 0.02;
-    double diffusion = 5;
-    double mobility = 0.05;
-    double dt = 0.005;
-    double potential_strength = 1;
-    std::string manifold_type = "torus";
-    unsigned int seed = 10;
+int main(int argc, char* argv[]) {
+    auto args = parseArgs(argc, argv);
+
+    // helper lambdas for getting args with defaults
+    auto getDouble = [&](const std::string& key, double def) {
+        return args.count(key) ? std::stod(args[key]) : def;
+    };
+    auto getUInt = [&](const std::string& key, unsigned int def) {
+        return args.count(key) ? (unsigned int)std::stoul(args[key]) : def;
+    };
+    auto getString = [&](const std::string& key, const std::string& def) {
+        return args.count(key) ? args[key] : def;
+    };
+
+    // simulation parameters
+    int numParticles         = args.count("N")        ? std::stoi(args["N"])       : 50;
+    double propulsion_speed  = getDouble("v0",         1.0);
+    double particle_radius   = getDouble("radius",     0.02);
+    double diffusion         = getDouble("diffusion",  0.05);
+    double mobility          = getDouble("mobility",   5.0);
+    double dt                = getDouble("dt",         0.005);
+    double potential_strength= getDouble("potential",  1.0);
+    std::string manifold_type= getString("manifold",   "torus");
+    unsigned int seed        = getUInt  ("seed",       10);
+    int numSteps             = args.count("steps")    ? std::stoi(args["steps"])   : 10000;
+    int saveEvery            = args.count("saveEvery") ? std::stoi(args["saveEvery"]): 1;
+    std::string exp_dir      = getString("expdir",  "../../data/trash");
+    std::string output       = getString("output", "particles.h5");
+
     SimParams simulationParameters(propulsion_speed, particle_radius, diffusion, mobility, dt, potential_strength, manifold_type, seed);
 
-    // this doesn't work rn.
-    auto manifold = std::make_unique<SphereManifold>(2.0);
-    if (manifold_type == "torus") { auto manifold = std::make_unique<TorusManifold>(2.0, 0.5); } // R = 2, r =0.5
-    else if (manifold_type == "sphere") { auto manifold = std::make_unique<SphereManifold>(2.0); } // R
-    else if (manifold_type == "euclidean") {auto manifold = std::make_unique<EuclideanManifold>(); }
-    else {return -1;} // failure, undefined manifold type
+    std::unique_ptr<Manifold> manifold;
+    if (manifold_type == "torus") { manifold = std::make_unique<TorusManifold>(1.0, 0.3183); } // R = 1, r = 1/pi
+    else if (manifold_type == "sphere") { manifold = std::make_unique<SphereManifold>(1.0); } // R = 1
+    else if (manifold_type == "euclidean") { manifold = std::make_unique<EuclideanManifold>(); }
+    else { std::cerr << "Unknown manifold: " << manifold_type << "\n"; return -1; }
 
     Simulation simulation(numParticles, simulationParameters, std::move(manifold));
 
-    // set up HDF5 file`
-    int numSteps = 5000;
-    int saveEvery = 10;
+    // set up HDF5 file
+    std::string filename = output;
 
-    std::string data_dir = "../../data/";
-    std::string time = getCurrentDateTime();
-    std::string filename = "particles.h5";
-    auto h5 = init_hdf5(data_dir+time+filename, simulationParameters, numParticles, numSteps, saveEvery);
+    auto h5 = init_hdf5(exp_dir+"/"+manifold_type+"/"+filename, simulationParameters, numParticles, numSteps, saveEvery);
 
     // run for however many timesteps and save to HDF5
     int save_index = 0;

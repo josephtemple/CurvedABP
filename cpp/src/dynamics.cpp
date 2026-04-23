@@ -1,12 +1,6 @@
 #include "dynamics.h"
 #include "manifold.h"
 
-// Heuristic gradient of potential function from V = A(x^4 - x^2 + y^4 - y^2)
-Vec2 gradV(double x, double y, double A) {
-    // grad(V) = A[4x^3 - 2x, 4y^3 - 2y]
-    return Vec2(0,0);
-}
-
 // Step particle in time according to 
 void step(Simulation& sim) {
     // set random seed and define probability distribution for brownian motion
@@ -27,7 +21,7 @@ void step(Simulation& sim) {
         double e2 = manifold.vielbein2(state.q1[i], state.q2[i]);
 
         // potential
-        Vec2 dV = gradV(state.q1[i], state.q2[i], params.potential_strength);
+        Vec2 dV = manifold.gradV(state.q1[i], state.q2[i], params.potential_strength);
         Vec2 grad_V = Vec2(e1*dV.x, e2*dV.y);
 
         // theta vector
@@ -56,16 +50,22 @@ void step(Simulation& sim) {
             double separation = std::sqrt(g1*dq.x*dq.x + g2*dq.y*dq.y);
 
             if (separation < 2*params.radius && separation > 1e-10) {
-                // flip headings
-                state.theta[i] = -state.theta[i];
-                state.theta[j] = -state.theta[j];
+                // flip heading vectors along collision normal
+                Vec2 n = Vec2(std::sqrt(g1) * dq.x, std::sqrt(g2) * dq.y);
+                n = n * (1.0 / n.norm()); // because i didn't define scalar division lol
+
+                auto reflect = [&](double theta) {
+                    Vec2 v = Vec2(std::cos(theta), std::sin(theta));
+                    double vn = v.x * n.x + v.y * n.y;
+                    Vec2 vr = Vec2(v.x - 2*vn*n.x, v.y - 2*vn*n.y);
+                    return std::atan2(vr.y, vr.x);
+                };
+                state.theta[i] = reflect(state.theta[i]);
+                state.theta[j] = reflect(state.theta[j]);
 
                 // push apart along geodesic
-                Vec2 n = Vec2(std::sqrt(g1) * dq.x, std::sqrt(g2) * dq.y);
-                n = n * (1.0 / n.norm());
-
                 double dist_to_move = 2*params.radius - separation;
-                Vec2 disp = n * dist_to_move * 0.5;
+                Vec2 disp = dq * (1/separation) * dist_to_move * 0.5;
 
                 pi -= disp;
                 pj += disp;
