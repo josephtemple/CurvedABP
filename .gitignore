@@ -12,6 +12,8 @@
 Makefile
 cmake_install.cmake
 
+/data/
+
 # -------------------------
 # FetchContent / external deps
 # -------------------------
