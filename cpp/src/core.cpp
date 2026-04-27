@@ -57,11 +57,11 @@ int main(int argc, char* argv[]) {
     };
 
     // simulation parameters
-    int numParticles         = args.count("N")        ? std::stoi(args["N"])       : 50;
+    int numParticles         = args.count("N")        ? std::stoi(args["N"])       : 250;
     double propulsion_speed  = getDouble("v0",         1.0);
     double particle_radius   = getDouble("radius",     0.02);
     double diffusion         = getDouble("diffusion",  0.05);
-    double coupling_str      = getDouble("coupling",   0.05);
+    double coupling_str      = getDouble("coupling_str",   0.05);
     double interaction_rad   = getDouble("interaction_rad", 0.05);
     double dt                = getDouble("dt",         0.005);
     

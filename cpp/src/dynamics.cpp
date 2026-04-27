@@ -32,11 +32,15 @@ void step(Simulation& sim) {
         p_i += disp;
     }
 
+    // pre-allocate vicsek accumulators, seeded with own orientation
+    std::vector<double> sin_sum(state.N), cos_sum(state.N);
+    for (int i = 0; i < state.N; ++i) {
+        sin_sum[i] = std::sin(state.theta[i]);
+        cos_sum[i] = std::cos(state.theta[i]);
+    }
+
     // collision detection & vicsek orientation averaging
     for (int i = 0; i < state.N; ++i) {
-        double sin_sum, cos_sum; // these need to be defined for the vicsek
-        sin_sum = 0;
-        cos_sum = 0;
         for (int j = i + 1; j < state.N; ++j) {
             Vec2View pi = state.pos(i);
             Vec2View pj = state.pos(j);
@@ -73,12 +77,26 @@ void step(Simulation& sim) {
 
             // vicsek orientational alignment type beat i started this too late bruh
             if (separation < params.interaction_rad) {
-                sin_sum += std::sin(state.theta[j]);
-                cos_sum += std::cos(state.theta[j]);
+                // parallel transport theta into shared tangent space via spin connection
+                // (first order approx — good enough for small interaction_rad)
+                double transported_theta_j = state.theta[j]
+                    - manifold.connection(state.q1[j], state.q2[j], dq.x, dq.y);
+                double transported_theta_i = state.theta[i]
+                    + manifold.connection(state.q1[i], state.q2[i], dq.x, dq.y);
+
+                // accumulate symmetrically so we only need the i<j pairs
+                sin_sum[i] += std::sin(transported_theta_j);
+                cos_sum[i] += std::cos(transported_theta_j);
+                sin_sum[j] += std::sin(transported_theta_i);
+                cos_sum[j] += std::cos(transported_theta_i);
             }
         }
+    }
+
+    // apply vicsek alignment
+    for (int i = 0; i < state.N; ++i) {
         // compute mean theta from summed sin and cos components
-        double theta_mean = std::atan2(sin_sum, cos_sum);
+        double theta_mean = std::atan2(sin_sum[i], cos_sum[i]);
 
         // shift theta towards mean of nearby particles sin(mean - i) means we add nothing if
         // they're close (sin 0 = 0) and max if theyre perpendicular (sin 90 )
