@@ -1,14 +1,10 @@
 // core.cpp
 //
-// v3. active brownian motion on a curved manifold, but better
+// v4. active brownian motion on a curved manifold, but betterer
 /*
 
-varies from previous version by moving from a bounded 2D Euclidean
-plane to a closed manifold (sphere or torus). 
-
-now includes git command line for experiment parameters and can be run by an external
-bash script to perform parameter sweeps
-
+varies from previous version by removing potential functions and adding orientation
+ordering with nearby fellas (vicsek style)
 */
 
 // my headers
@@ -65,17 +61,19 @@ int main(int argc, char* argv[]) {
     double propulsion_speed  = getDouble("v0",         1.0);
     double particle_radius   = getDouble("radius",     0.02);
     double diffusion         = getDouble("diffusion",  0.05);
-    double mobility          = getDouble("mobility",   5.0);
+    double coupling_str      = getDouble("coupling",   0.05);
+    double interaction_rad   = getDouble("interaction_rad", 0.05);
     double dt                = getDouble("dt",         0.005);
-    double potential_strength= getDouble("potential",  1.0);
+    
     std::string manifold_type= getString("manifold",   "torus");
+
     unsigned int seed        = getUInt  ("seed",       10);
     int numSteps             = args.count("steps")    ? std::stoi(args["steps"])   : 10000;
     int saveEvery            = args.count("saveEvery") ? std::stoi(args["saveEvery"]): 1;
     std::string exp_dir      = getString("expdir",  "../../data/trash");
     std::string output       = getString("output", "particles.h5");
 
-    SimParams simulationParameters(propulsion_speed, particle_radius, diffusion, mobility, dt, potential_strength, manifold_type, seed);
+    SimParams simulationParameters(propulsion_speed, particle_radius, diffusion, coupling_str, interaction_rad, dt, manifold_type, seed);
 
     std::unique_ptr<Manifold> manifold;
     if (manifold_type == "torus") { manifold = std::make_unique<TorusManifold>(1.0, 0.3183); } // R = 1, r = 1/pi

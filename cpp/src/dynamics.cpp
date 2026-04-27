@@ -20,24 +20,23 @@ void step(Simulation& sim) {
         double e1 = manifold.vielbein1(state.q1[i], state.q2[i]);
         double e2 = manifold.vielbein2(state.q1[i], state.q2[i]);
 
-        // potential
-        Vec2 dV = manifold.gradV(state.q1[i], state.q2[i], params.potential_strength);
-        Vec2 grad_V = Vec2(e1*dV.x, e2*dV.y);
-
         // theta vector
         Vec2 unit_theta = Vec2(e1 * std::cos(state.theta[i]), e2 * std::sin(state.theta[i]));
 
         // displacement of coords
-        Vec2 disp = (unit_theta * params.v - grad_V * params.mobility) * params.dt;
+        Vec2 disp = (unit_theta * params.v) * params.dt;
 
         // theta update with spin connection to account for tangent space rotating across manifold
-        state.theta[i] += manifold.connection(state.q1[i], state.q2[i], disp.x, disp.y)
-                          + std::sqrt(2.0 * params.diffusion * params.dt) * noise(rng);
+        state.theta[i] += manifold.connection(state.q1[i], state.q2[i], disp.x, disp.y)   // spin connection
+                        + std::sqrt(2.0 * params.diffusion * params.dt) * noise(rng);   // rotational diffusion
         p_i += disp;
     }
 
-    // collision detection
+    // collision detection & vicsek orientation averaging
     for (int i = 0; i < state.N; ++i) {
+        double sin_sum, cos_sum; // these need to be defined for the vicsek
+        sin_sum = 0;
+        cos_sum = 0;
         for (int j = i + 1; j < state.N; ++j) {
             Vec2View pi = state.pos(i);
             Vec2View pj = state.pos(j);
@@ -49,6 +48,7 @@ void step(Simulation& sim) {
             double g2 = manifold.g22(state.q1[i], state.q2[i]);
             double separation = std::sqrt(g1*dq.x*dq.x + g2*dq.y*dq.y);
 
+            // move apart if too close
             if (separation < 2*params.radius && separation > 1e-10) {
                 // flip heading vectors along collision normal
                 Vec2 n = Vec2(std::sqrt(g1) * dq.x, std::sqrt(g2) * dq.y);
@@ -70,7 +70,19 @@ void step(Simulation& sim) {
                 pi -= disp;
                 pj += disp;
             }
+
+            // vicsek orientational alignment type beat i started this too late bruh
+            if (separation < params.interaction_rad) {
+                sin_sum += std::sin(state.theta[j]);
+                cos_sum += std::cos(state.theta[j]);
+            }
         }
+        // compute mean theta from summed sin and cos components
+        double theta_mean = std::atan2(sin_sum, cos_sum);
+
+        // shift theta towards mean of nearby particles sin(mean - i) means we add nothing if
+        // they're close (sin 0 = 0) and max if theyre perpendicular (sin 90 )
+        state.theta[i] += params.coupling_str * std::sin(theta_mean - state.theta[i]) * params.dt;
     }
     
     ++sim.step_index;

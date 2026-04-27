@@ -23,13 +23,13 @@ struct SimParams {
     double v;                         // velocity of each particle            
     double radius;                    // radius of each particle in params.box_length
     double diffusion;                 // rotational diffusion constant in rad^2 / time
-    double mobility;                  // 
+    double coupling_str;              // 
+    double interaction_rad;
     double dt;                        // time step size
-    double potential_strength;        // change how strong the potential function acts
     std::string manifold_type;        // type of manifold. allowed: {sphere, torus}
     unsigned int seed;                // random number generation seed
 
-    SimParams(double v_, double r_, double diff_, double mobil_, double dt_, double potenstr_, std::string manifold_type_, unsigned int seed_);
+    SimParams(double v_, double r_, double diff_, double coup_, double inter_, double dt_, std::string manifold_type_, unsigned int seed_);
 };
 
 // Data structure for packaging the whole simulation

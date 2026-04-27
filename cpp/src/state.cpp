@@ -8,8 +8,8 @@ ParticleState::ParticleState(int N_): N(N_), q1(N_), q2(N_), theta(N_) {}
 Vec2View ParticleState::pos(int i) { return Vec2View{ q1[i], q2[i] };}
 
 // params constructor
-SimParams::SimParams(double v_, double r_, double diff_, double mobil_, double dt_, double potenstr_, std::string manifold_type_, unsigned int seed_)
-        : v(v_), radius(r_), diffusion(diff_), mobility(mobil_), dt(dt_), potential_strength(potenstr_), manifold_type(manifold_type_), seed(seed_) {}
+SimParams::SimParams(double v_, double r_, double diff_,  double coup_, double inter_, double dt_, std::string manifold_type_, unsigned int seed_)
+        : v(v_), radius(r_), diffusion(diff_), coupling_str(coup_), interaction_rad(inter_), dt(dt_), manifold_type(manifold_type_), seed(seed_) {}
 
 // simulation constructor
 Simulation::Simulation(int N, const SimParams& p, std::unique_ptr<Manifold> m)
