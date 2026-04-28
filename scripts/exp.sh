@@ -2,7 +2,7 @@
 
 # set up directories
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-cd "$SCRIPT_DIR/../cpp/build" 
+cd "$SCRIPT_DIR/../cpp/build" || exit
 
 TIMESTAMP=$(date +"%Y-%m-%d_%H-%M-%S")
 DATA_DIR="../../data"
@@ -20,8 +20,8 @@ V0=1.0
 RADIUS=0.02
 INT_RAD=0.5
 DT=0.005
-STEPS=2000
-SAVE_EVERY=1
+STEPS=10000
+SAVE_EVERY=5
 
 # swept parameters
 ds=(0.0 0.2 1.0 5.0)
@@ -40,17 +40,19 @@ ss=(10 20 30)
     echo "v0          : $V0"
     echo "r (radius)  : $RADIUS"
     echo "dt          : $DT"
-    echo "steps       : $STEPS"
     echo "inter_rad   : $INT_RAD"
+    echo "steps       : $STEPS"
+    echo "save_every  : $SAVE_EVERY"
     echo "------------------------------------------------"
     echo "Swept Params:"
-    echo "Metrics     : sphere, torus, euclidean"
+    echo "Manifolds   : sphere, torus, euclidean"
     echo "D (diff)    : ${ds[*]}"
     echo "C (clust)   : ${cs[*]}"
-    echo "S (speed)   : ${ss[*]}"
+    echo "S (seed)    : ${ss[*]}"
     echo "------------------------------------------------"
 } | tee -a "$LOG_FILE"
 
+# i have 8 cores so this leaves one for my computer to still function
 MAX_JOBS=7 
 
 # sweep through parameters
@@ -78,7 +80,7 @@ for manifold in sphere torus euclidean; do
                     --output "$outfile" \
                     --expdir "${FULL_PATH}" &
 
-                # job control
+                # run 7 experiments in parallel
                 while [ $(jobs -rp | wc -l) -ge $MAX_JOBS ]; do
                     sleep 0.5 
                 done
