@@ -68,7 +68,7 @@ int main(int argc, char* argv[]) {
     std::string manifold_type= getString("manifold",   "torus");
 
     unsigned int seed        = getUInt  ("seed",       10);
-    int numSteps             = args.count("steps")    ? std::stoi(args["steps"])   : 10000;
+    int numSteps             = args.count("steps")    ? std::stoi(args["steps"])   : 2000;
     int saveEvery            = args.count("saveEvery") ? std::stoi(args["saveEvery"]): 1;
     std::string exp_dir      = getString("expdir",  "../../data/trash");
     std::string output       = getString("output", "particles.h5");
