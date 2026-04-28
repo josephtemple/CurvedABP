@@ -62,7 +62,7 @@ int main(int argc, char* argv[]) {
     double particle_radius   = getDouble("radius",     0.02);
     double diffusion         = getDouble("diffusion",  0.05);
     double coupling_str      = getDouble("coupling_str",   0.05);
-    double interaction_rad   = getDouble("interaction_rad", 0.05);
+    double interaction_rad   = getDouble("interaction_rad", 0.5);
     double dt                = getDouble("dt",         0.005);
     
     std::string manifold_type= getString("manifold",   "torus");

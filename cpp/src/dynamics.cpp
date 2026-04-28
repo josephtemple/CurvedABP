@@ -30,6 +30,9 @@ void step(Simulation& sim) {
         state.theta[i] += manifold.connection(state.q1[i], state.q2[i], disp.x, disp.y)   // spin connection
                         + std::sqrt(2.0 * params.diffusion * params.dt) * noise(rng);   // rotational diffusion
         p_i += disp;
+
+        // ensure q1, q2 stay within correct bounds for any manifold
+        manifold.wrap(state.q1[i], state.q2[i]);
     }
 
     // pre-allocate vicsek accumulators, seeded with own orientation

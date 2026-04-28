@@ -12,8 +12,9 @@ struct Manifold {
     virtual double g11(double q1, double q2) const = 0;
     virtual double g22(double q1, double q2) const = 0;
     virtual double connection(double q1, double q2, double dq1, double dq2) const = 0;
-    virtual Vec2 gradV(double q1, double q2, double A) const = 0;
+    virtual void wrap(double& q1, double& q2) const = 0;
     virtual ~Manifold() = default;
+    
 };
 
 // sphere manifold [q1 = phi (azimuthal angle), q2 = theta (polar angle)]
@@ -26,7 +27,7 @@ struct SphereManifold : Manifold {
     double g11(double q1, double q2) const override;
     double g22(double q1, double q2) const override;
     double connection(double q1, double q2, double dq1, double dq2) const override;
-    virtual Vec2 gradV(double q1, double q2, double A) const override;
+    void wrap(double& q1, double& q2) const override;
 };
 
 // torus manifold [q1 = phi (around the donut), q2 = psi (angle around cross-section)]
@@ -39,7 +40,7 @@ struct TorusManifold : Manifold {
     double g11(double q1, double q2) const override;
     double g22(double q1, double q2) const override;
     double connection(double q1, double q2, double dq1, double dq2) const override;
-    virtual Vec2 gradV(double q1, double q2, double A) const override;
+    void wrap(double& q1, double& q2) const override;
 };
 
 // euclidean manifold [q1 = x, q2 = y]
@@ -51,5 +52,5 @@ struct EuclideanManifold : Manifold {
     double g11(double q1, double q2) const override;
     double g22(double q1, double q2) const override;
     double connection(double q1, double q2, double dq1, double dq2) const override;
-    virtual Vec2 gradV(double q1, double q2, double A) const override;
+    void wrap(double& q1, double& q2) const override;
 };

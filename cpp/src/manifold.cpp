@@ -18,11 +18,23 @@ double SphereManifold::connection(double q1, double q2, double dq1, double dq2) 
     return std::cos(q2) * dq1;
 }
 
-// V = Asin^2(\theta)cos(2\phi) -> four wells   
-Vec2 SphereManifold::gradV(double q1, double q2, double A) const {
-    double dVdq1 = -2*A * std::sin(q2)*std::sin(q2) * std::sin(2*q1);
-    double dVdq2 =  2*A * std::sin(q2)*std::cos(q2) * std::cos(2*q1);
-    return Vec2(dVdq1, dVdq2);
+// keep q1 = phi between (0,2pi) and q2 = theta between (0,pi)
+// flipping phi if theta exceeds its bounds
+void SphereManifold::wrap(double& q1, double& q2) const {
+    // reflect over north pole
+    if (q2 < 0) {
+        q2 = -q2;
+        q1 += M_PI;
+    }
+    // reflect over south pole
+    if (q2 > M_PI) {
+        q2 = 2.0 * M_PI - q2;
+        q1 += M_PI;
+    }
+    
+    // keep phi between (0,2pi)
+    q1 = std::fmod(q1, 2.0 * PI);
+    if (q1 < 0) {q1 += 2.0 * PI;}
 }
 
 
@@ -40,11 +52,13 @@ double TorusManifold::connection(double q1, double q2, double dq1, double dq2) c
     return -std::sin(q2) * dq1;
 }
 
-// V = Acos(theta)cos(phi)
-Vec2 TorusManifold::gradV(double q1, double q2, double A) const {
-    double dVdq1 = -A * std::sin(q1)*std::cos(q2);
-    double dVdq2 = -A * std::sin(q2)*std::cos(q1);
-    return Vec2(dVdq1, dVdq2);
+// keep q1 = phi and q2 = theta between (0,2pi)
+void TorusManifold::wrap(double& q1, double& q2) const {
+    q1 = std::fmod(q1, 2.0 * PI);
+    if (q1 < 0) {q1 += 2.0 * PI;}
+
+    q2 = std::fmod(q2, 2.0 * PI);
+    if (q2 < 0) {q2 += 2.0 * PI;}
 }
 
 
@@ -58,11 +72,13 @@ double EuclideanManifold::vielbein2(double q1, double q2) const { return 1; }
 
 double EuclideanManifold::connection(double q1, double q2, double dq1, double dq2) const { return 0; }
 
-// V = A(xy/L^2) exp(1 - (x^2+y^2)/2L^2) -- four wells 
-Vec2 EuclideanManifold::gradV(double q1, double q2, double A) const {
-    double L = 2*sqrt(PI);
+// keep particles in +/- 2 sqrt(pi)  (same surface area as R = 1 sphere), pacman style
+void EuclideanManifold::wrap(double& q1, double& q2) const {
+    double L = 2*std::sqrt(PI);
 
-    double dVdq1 = A*q2/(L*L) * (1 + q1*q1/(L*L))*exp(1 - (q1*q1 + q2*q2)/(2*L*L));
-    double dVdq2 = A*q1/(L*L) * (1 + q2*q2/(L*L))*exp(1 - (q1*q1 + q2*q2)/(2*L*L));
-    return Vec2(dVdq1, dVdq2);
+    if (q1 >  L/2) q1 -= L;
+    if (q1 < -L/2) q1 += L;
+    
+    if (q2 >  L/2) q2 -= L;
+    if (q2 < -L/2) q2 += L;
 }

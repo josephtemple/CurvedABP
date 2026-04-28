@@ -1,75 +1,168 @@
+"""
+animate.py
+
+animate the motion of active brownian particles on curved manifolds under the effects of orientational alignment and rotational diffusion
+
+ensure the cwd is the python dir or else the interpreter will get confused poor buddy
+
+"""
+
+import h5py
 import numpy as np
 import matplotlib.pyplot as plt
-import matplotlib.animation as animation
-plt.rcParams['figure.dpi'] = 150
+from matplotlib.animation import FuncAnimation
+from dataclasses import dataclass
 
-import abp_core
+import os
+from pathlib import Path
 
-# ---------------------------
-# Simulation parameters
-# ---------------------------
-L = 1
-N = 1000
-v0 = 2
-particle_spawn_lim = 0.7 * L
+# 1. Get the path to the current file
+script_path = Path(__file__).resolve()
 
-# initialize positions and orientations
-xs, ys = np.random.uniform(-particle_spawn_lim, particle_spawn_lim, (2, N))
-thetas = np.random.uniform(0, 2*np.pi, N)
+# 2. Get the directory of that file
+script_dir = script_path.parent
 
-# C++ objects
-state = abp_core.ParticleState()
-state.x = xs.copy()
-state.y = ys.copy()
-state.theta = thetas.copy()
+# 3. Change the working directory
+os.chdir(script_dir)
 
-params = abp_core.SimParams()
-params.v = v0
-params.radius = 0.02
-params.diffusion = 5.0
-params.mobility = 0.5
-params.dt = 1/500
-params.box_length = L
-params.potential_strength = 3.0
-params.seed = 42
+### LOAD THAT DATA TWIN ###
+@dataclass
+class SimData:
+    q1: np.ndarray      # (n_frames, N) - phi
+    q2: np.ndarray      # (n_frames, N) - theta
+    theta: np.ndarray   # (n_frames, N) - orientation
 
-# ---------------------------
-# Plot setup
-# ---------------------------
-fig, ax = plt.subplots()
-ax.set_xlim(-L, L)
-ax.set_ylim(-L, L)
-ax.set_xticks([])
-ax.set_yticks([])
+def load(path: Path, frames=None) -> SimData:
+    with h5py.File(path, 'r') as f:
+        sl = frames if frames is not None else slice(None)
+        return SimData(
+            q1    = np.asarray(f['state/q1'])[sl],
+            q2    = np.asarray(f['state/q2'])[sl],
+            theta = np.asarray(f['state/theta'])[sl]
+        )
+    
+data_dir = script_path.parent.parent / 'data' / '2026-04-27_23-57-25'
+metrics = ['sphere', 'torus', 'euclidean']
+ds, cs, ss = [0.0, 0.2, 1.0, 5.0], [0.0, 0.2, 1.0, 5.0], [10, 20, 30]
 
-# Potential field
-n_pts = 500
-x_range = np.linspace(-L, L, n_pts)
-y_range = np.linspace(-L, L, n_pts)
-X, Y = np.meshgrid(x_range, y_range)
-potential = 3*(X**4 - X**2) + 3*(Y**4 - Y**2)  # scaled 4r^3-2r
-im = ax.imshow(potential, extent=(-L, L, -L, L), cmap='PiYG')
-cbar = fig.colorbar(im, ax=ax, label='Potential')
+metric = metrics[2]
+d = ds[0]
+c = cs[3]
+s = ss[2]
 
-# Use a single scatter for all particles
-fig_width_inch = fig.get_size_inches()[0]
-ax_width_data = ax.get_xlim()[1] - ax.get_xlim()[0]
-diam_points = params.radius * (fig_width_inch / ax_width_data) * 72
-s = np.pi * (diam_points / 2)**2
+dataset = f'd{d}_c{c}_s{s}.h5'
 
-scatter = ax.scatter(state.x, state.y, s=s, c='white', edgecolors='black')
+file_path = data_dir / metric / dataset
 
-# ---------------------------
-# Animation functions
-# ---------------------------
-def init():
-    scatter.set_offsets(np.c_[state.x, state.y])
-    return (scatter,)
+data = load(file_path)
 
-def animate(frame):
-    abp_core.step(state, params)
-    scatter.set_offsets(np.c_[state.x, state.y])
-    return (scatter,)
 
-anim = animation.FuncAnimation(fig, animate, init_func=init, frames=300, interval=5, blit=True)
+# Convert to Cartesian on sphere and torus, and set some plotting params
+phi, theta = data.q1, data.q2
+R, r = 0,0
+if (metric == metrics[0]) :
+    R = 1
+    x = R*np.sin(theta) * np.cos(phi)
+    y = R*np.sin(theta) * np.sin(phi)
+    z = R*np.cos(theta)
+elif (metric == metrics[1]) :
+    # ignore the bad coding practices (hard coded R = 1, r = 1/pi for torus)
+    R, r = 1, 1/np.pi
+    x = (R + r*np.cos(theta)) * np.cos(phi)
+    y = (R + r*np.cos(theta)) * np.sin(phi)
+    z = r*np.sin(theta)
+else:
+    # this is a not very clear way to do this (better would just be x=q1 etc but phi and theta are already defined)
+    x = phi
+    y = theta
+    z = np.zeros_like(phi)
+
+
+### MATPLOTLIB THAT JAWN ###
+fig = plt.figure(figsize=(10, 8))
+ax = fig.add_subplot(111, projection='3d')
+ax.set_aspect('equal')
+
+# initial frame
+scat = ax.scatter(x[0], y[0], z[0], c='blue', s=10, alpha=0.8)
+
+# set limits based on geometry
+limit = 5
+if (metric == metrics[0]):
+    limit = R + 0.1
+elif (metric == metrics[1]):
+    limit = R + r + 0.1
+
+ax.set_xlim(-limit, limit)
+ax.set_ylim(-limit, limit)
+ax.set_zlim(-limit, limit)
+
+ax.set_axis_off()
+
+# add wireframe surface
+if (metric == metrics[0]):
+    u = np.linspace(0, 2*np.pi, 30)
+    v = np.linspace(0, np.pi, 30)
+    U, V = np.meshgrid(u, v)
+
+    X_surf = R * np.cos(U) * np.sin(V)
+    Y_surf = R * np.sin(U) * np.sin(V)
+    Z_surf = R * np.cos(V)
+
+elif (metric == metrics[1]):
+    u = np.linspace(0, 2*np.pi, 30)
+    v = np.linspace(0, 2*np.pi, 30)
+    U, V = np.meshgrid(u, v)
+
+    X_surf = (R + r * np.cos(V)) * np.cos(U)
+    Y_surf = (R + r * np.cos(V)) * np.sin(U)
+    Z_surf = r * np.sin(V)
+
+else :
+    u = np.linspace(-limit, limit, 30)
+    v = np.linspace(-limit, limit, 30)
+    U, V = np.meshgrid(u, v)
+
+    X_surf = U
+    Y_surf = V
+    Z_surf = np.zeros_like(U)
+
+ax.plot_wireframe(X_surf, Y_surf, Z_surf, color='gray', alpha=0.1)
+
+
+# helper function for naming
+def anim_title(m: str, d: float, c: float, s: int) -> str:
+    if (m == metrics[0]):
+        m_str = "Sphere"
+    elif (m == metrics[1]):
+        m_str = "Torus"
+    else:
+        m_str = "2D Euclidean Space"
+
+
+    dc_map = {
+        0.0: "No",
+        0.2: "Weak",
+        1.0: "Intermediate",
+        5.0: "Strong"
+    }
+    
+    return f"Active Brownian Particles\n{dc_map[d]} diffusion (d = {d}) and {dc_map[c]} coupling (c = {c}) on a {m_str}. \nRandom seed = {s}"
+
+ax.set_title(anim_title(metric, d, c, s))
+
+
+# build the animation
+def update(frame_idx):
+    scat._offsets3d = (x[frame_idx], y[frame_idx], z[frame_idx]) # type: ignore
+    return scat,
+
+ani = FuncAnimation(
+    fig, 
+    update, 
+    frames=range(0, len(x), 5), 
+    interval=30, 
+    blit=False
+)
+
 plt.show()

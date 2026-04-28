@@ -26,9 +26,10 @@ Simulation::Simulation(int N, const SimParams& p, std::unique_ptr<Manifold> m)
         }
     }
     else if (p.manifold_type == "sphere") {
+        std::uniform_real_distribution<double> rand_cos(-1.0, 1.0);
         for (int i = 0; i < N; ++i) {
                 state.q1[i]    = rand_angle(rng);      // phi in (0,2pi)
-                state.q2[i]    = rand_angle(rng) / 2;  // theta in (0,pi)
+                state.q2[i]    = std::acos(rand_cos(rng));  // theta in (0,pi), more uniformly sampled along theta
                 state.theta[i] = rand_angle(rng);      // tangent space theta in (0,2pi)
         }
     }
