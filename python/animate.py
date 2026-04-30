@@ -39,8 +39,8 @@ manifolds = ['sphere', 'torus', 'euclidean']
 ds, cs, ss = [0.0, 0.2, 1.0, 5.0], [0.0, 0.2, 1.0, 5.0], [10, 20, 30]
 
 manifold = manifolds[1]
-d = ds[3]
-c = cs[1]
+d = ds[1]
+c = cs[3]
 s = ss[2]
 
 dataset = f'd{d}_c{c}_s{s}.h5'
@@ -198,8 +198,8 @@ def update(frame_idx):
 ani = FuncAnimation(
     fig, 
     update, 
-    frames=range(0, len(x), 2), 
-    interval=30, 
+    frames=range(0, len(x), 1), 
+    interval=120, 
     blit=False
 )
 

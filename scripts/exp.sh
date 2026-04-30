@@ -15,12 +15,12 @@ mkdir -p "${FULL_PATH}"/{sphere,torus,euclidean}
 LOG_FILE="${FULL_PATH}/sweep.log"
 
 # default parameters
-N=250
+N=1000
 V0=1.0
 RADIUS=0.02
 INT_RAD=0.5
 DT=0.005
-STEPS=10000
+STEPS=2500
 SAVE_EVERY=5
 
 # swept parameters
