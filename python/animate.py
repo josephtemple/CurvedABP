@@ -40,7 +40,7 @@ ds, cs, ss = [0.0, 0.2, 1.0, 5.0], [0.0, 0.2, 1.0, 5.0], [10, 20, 30]
 
 manifold = manifolds[2]
 d = ds[1]
-c = cs[3]
+c = cs[2]
 s = ss[2]
 
 dataset = f'd{d}_c{c}_s{s}.h5'
@@ -203,4 +203,23 @@ ani = FuncAnimation(
     blit=False
 )
 
-plt.show()
+
+save_name = f"{manifold}_d{d}_c{c}_s{s}.mp4"
+save_path = script_dir.parent / Path('presentation') / Path('figures') / Path('videos') / Path(save_name)
+
+save = False
+
+if (save):
+    print(f"Saving animation to {save_path}...")
+
+    # Save the animation
+    ani.save(
+        save_path, 
+        writer='ffmpeg', 
+        fps=30, 
+        extra_args=['-vcodec', 'libx264'],
+        dpi=150
+    )
+
+    print("Save complete!")
+else: plt.show()
