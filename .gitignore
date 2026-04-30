@@ -15,6 +15,15 @@ cmake_install.cmake
 /data/
 
 # -------------------------
+# LaTeX junk
+# -------------------------
+*.aux
+*.nav
+*.snm
+*.synctex.gz
+*.toc
+
+# -------------------------
 # FetchContent / external deps
 # -------------------------
 cpp/build/_deps/
