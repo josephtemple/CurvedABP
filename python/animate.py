@@ -38,7 +38,7 @@ data_dir = script_path.parent.parent / 'data' / '2026-04-28_16-25-59'
 manifolds = ['sphere', 'torus', 'euclidean']
 ds, cs, ss = [0.0, 0.2, 1.0, 5.0], [0.0, 0.2, 1.0, 5.0], [10, 20, 30]
 
-manifold = manifolds[1]
+manifold = manifolds[2]
 d = ds[1]
 c = cs[3]
 s = ss[2]
@@ -199,7 +199,7 @@ ani = FuncAnimation(
     fig, 
     update, 
     frames=range(0, len(x), 1), 
-    interval=120, 
+    interval=60, 
     blit=False
 )
 
