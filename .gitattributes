@@ -1,2 +1,2 @@
 *.ipynb linguist-vendored=true
-*.tex   linguist-vendored=true
+presentation/**   linguist-vendored=true
