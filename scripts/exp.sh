@@ -11,6 +11,9 @@ FULL_PATH="${DATA_DIR}/${EXPERIMENT_DIR}"
 
 mkdir -p "${FULL_PATH}"/{sphere,torus,euclidean}
 
+# set number of cores to use
+MAX_JOBS="{MAX_JOBS:-$(( $(nproc) - 1 ))}"
+
 # Define the log file inside the experiment directory
 LOG_FILE="${FULL_PATH}/sweep.log"
 
@@ -34,6 +37,7 @@ ss=(10 20 30)
     echo "SWEEP START : $(date)"
     echo "Output Dir  : ${FULL_PATH}"
     echo "Total Sims  : $((${#ds[@]} * ${#cs[@]} * ${#ss[@]} * 3))"
+    echo "Num Cores   : $MAX_JOBS"
     echo "------------------------------------------------"
     echo "Fixed Params:"
     echo "N           : $N"
@@ -52,8 +56,7 @@ ss=(10 20 30)
     echo "------------------------------------------------"
 } | tee -a "$LOG_FILE"
 
-# i have 8 cores so this leaves one for my computer to still function
-MAX_JOBS=7 
+
 
 # sweep through parameters
 for manifold in sphere torus euclidean; do
