@@ -12,7 +12,7 @@ FULL_PATH="${DATA_DIR}/${EXPERIMENT_DIR}"
 mkdir -p "${FULL_PATH}"/{sphere,torus,euclidean}
 
 # set number of cores to use
-MAX_JOBS="{MAX_JOBS:-$(( $(nproc) - 1 ))}"
+MAX_JOBS="${MAX_JOBS:-$(( $(nproc) - 1 ))}"
 
 # Define the log file inside the experiment directory
 LOG_FILE="${FULL_PATH}/sweep.log"
