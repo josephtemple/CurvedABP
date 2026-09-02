@@ -12,6 +12,7 @@
 Makefile
 cmake_install.cmake
 
+data/*
 !data/.gitkeep
 
 # -------------------------
